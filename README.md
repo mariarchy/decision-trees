@@ -93,3 +93,30 @@ First, we need to build each tree. The algorithm goes as follows:
 Build any number of such trees.
 
 To generate the prediction yielded by a single tree, trace your tree through your example until you hit a leaf node. Return the leaf node and its associated class. To generate a prediction yielded by the forest of trees, repeat the single-prediction process on all trees and return the majority vote.
+
+## Data models
+
+OK so to implement this, we need a few data models:
+
+- `InternalNode`, the internal node with a split feature, value, and a left and right subtree
+- `LeafNode`, the leaf node with an assigned class
+- `RandomizedTree`, a single randomized tree 
+
+
+### InternalNode
+
+The internal node contains:
+- A pointer to the left and right node, which can be an `InternalNode` or `LeafNode`
+- A split feature
+- A split value
+
+### LeafNode
+
+The leaf node contains just a class label.
+
+### RandomizedTree
+
+The randomized tree that implements the ExtraTree algorithm. We'll just store a pointer to the root.
+
+
+Across these models we can store additional properties, but I'll just stick to the data I need for this exercise.
