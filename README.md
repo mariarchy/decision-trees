@@ -74,3 +74,22 @@ The goal of the approaches within #1 must optimize for (1) the diversity and (2)
  
 ## Extremely Randomized Forests, in my own words
 Extremely Randomized Forests is an algorithm under the set of approaches within #1. In layman's terms, it says, "Let's create a bunch of trees randomly, i.e. randomize the feature and the split we choose at each internal node — capped at the minimum size a subtree of samples is allowed to contain — and let this forest of random trees vote on prediction. Majority vote wins"
+
+### Algorithm
+
+First, we need to build each tree. The algorithm goes as follows:
+1. Start with the root node. Each node has a subset of the training dataset it works upon. At the root, this is the full training dataset. 
+2. Choose a random subset of features for this node (typically the square root of the total features available to the ). 
+3. For each feature in the subset, choose a random split value. The range should be the min to max value of feature values in the sample for this node.
+4. Pick the best among the random splits by measuring the impurity reduction, i.e. the split that gets us closest to a unanimous result, i.e. all examples in the left tree are one class, all examples in the right tree are another class.
+5. Create a left and a right subtree using the best split.
+6. If any of the following conditions are met in the subtree, create a leaf node. No more subtrees allowed!
+- The subtree has hit maximum purity, i.e. the results are unanimous for the subtree.
+- No subtrees yield a reduction in impurity, i.e. it's not worth going further.
+- We have hit the maximum allowed depth for the tree.
+- We have hit the maximum permitted leaf nodes in the tree.
+7. Otherwise, repeat step 1-4 for each subtree with their selected subset of samples.
+
+Build any number of such trees.
+
+To generate the prediction yielded by a single tree, trace your tree through your example until you hit a leaf node. Return the leaf node and its associated class. To generate a prediction yielded by the forest of trees, repeat the single-prediction process on all trees and return the majority vote.
