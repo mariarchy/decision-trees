@@ -8,6 +8,9 @@ from utils import get_nonconstant_features, get_split_score
 class LeafNode:
     label: int
 
+    def height(self):
+        return 1
+
 
 @dataclass
 class InternalNode:
@@ -15,6 +18,15 @@ class InternalNode:
     threshold: float
     left: Union["InternalNode", LeafNode]
     right: Union["InternalNode", LeafNode]
+
+    def height(self) -> int:
+        """
+        Compute max height of the subtree at this node
+        """
+        left = self.left.height()
+        right = self.right.height()
+
+        return max(left, right) + 1
 
 
 class Split(NamedTuple):
@@ -106,6 +118,12 @@ class RandomizedTree:
         Raises MissingTreeException if the tree has not been built.
         """
         pass
+
+    def height(self) -> int:
+        if self.root is None:
+            return -1
+
+        return self.root.height()
 
 
 class RandomizedForest:

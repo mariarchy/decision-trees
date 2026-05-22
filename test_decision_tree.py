@@ -1,6 +1,27 @@
 import numpy as np
 import unittest
-from decision_tree import LeafNode, RandomizedTree
+from decision_tree import LeafNode, RandomizedTree, InternalNode
+
+
+class TestInternalNode(unittest.TestCase):
+    def test_height_shallow(self):
+        node = InternalNode(
+            feature=0, threshold=100, left=LeafNode(label=0), right=LeafNode(label=1)
+        )
+        assert node.height() == 2
+
+    def test_height_deep(self):
+        left = InternalNode(
+            feature=0, threshold=100, left=LeafNode(label=0), right=LeafNode(label=1)
+        )
+        right = InternalNode(
+            feature=1, threshold=10, left=LeafNode(label=0), right=LeafNode(label=2)
+        )
+        right2 = InternalNode(
+            feature=2, threshold=20, left=LeafNode(label=0), right=right
+        )
+        root = InternalNode(feature=0, threshold=100, left=left, right=right2)
+        assert root.height() == 4
 
 
 class TestRandomizedTree(unittest.TestCase):
