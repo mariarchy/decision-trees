@@ -51,7 +51,6 @@ class RandomizedTree:
         Returns the majority value in 1D array Y
         """
         assert len(Y.shape) == 1
-
         return int(np.argmax(np.bincount(Y)))
 
     def build_tree(
@@ -105,8 +104,8 @@ class RandomizedTree:
 
         assert len(splits) > 0
         s = max(splits, key=lambda s: s.score)
-        left = self._build_tree(X[s.row_mask], Y[s.row_mask], depth + 1, rng)
-        right = self._build_tree(X[~s.row_mask], Y[~s.row_mask], depth + 1, rng)
+        left = self.build_tree(X[s.row_mask], Y[s.row_mask], depth + 1, rng)
+        right = self.build_tree(X[~s.row_mask], Y[~s.row_mask], depth + 1, rng)
         return InternalNode(
             feature=s.feature, threshold=s.threshold, left=left, right=right
         )

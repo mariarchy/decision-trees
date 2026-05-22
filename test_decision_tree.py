@@ -1,6 +1,7 @@
 import numpy as np
 import unittest
 from decision_tree import LeafNode, RandomizedTree, InternalNode
+from test_fixtures import X_deep, Y_deep
 
 
 class TestInternalNode(unittest.TestCase):
@@ -99,3 +100,28 @@ class TestRandomizedTree(unittest.TestCase):
         rng = np.random.default_rng(42)
 
         assert tree.build_tree(X, Y, depth=5, rng=rng) == LeafNode(label=1)
+
+    def test_build_tree_shallow(self):
+        # One level of recursion
+        X = np.array(
+            [
+                [0, 0],
+                [0, 1],
+                [10, 0],
+                [10, 1],
+            ]
+        )
+        Y = np.array([0, 0, 1, 1])
+        tree = RandomizedTree(max_depth=10, min_samples=2)
+        rng = np.random.default_rng(42)
+        root = tree.build_tree(X, Y, 0, rng)
+
+        assert root.height() == 2
+
+    def test_build_tree_deep(self):
+        # Deep fixture, we expect a height of 9 with a seed of 42.
+        tree = RandomizedTree(max_depth=10, min_samples=2)
+        rng = np.random.default_rng(42)
+        root = tree.build_tree(X_deep, Y_deep, 0, rng)
+
+        assert root.height() == 9

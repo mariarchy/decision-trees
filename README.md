@@ -9,8 +9,14 @@ This is my attempt at building my mental model of a supervised learning algorith
 I've spent the last few hours reading articles on the topic ([this visualization](https://mlu-explain.github.io/decision-tree/) has to be my favourite thus far). My goal is to implement the algorithm from scratch and stress-test my understanding of the concept. 
 
 Here are a few rules I set for myself:
-- Do not rely on the use of LLMs to write code or tests. In other words, build the algorithm from scratch. I want to reveal the gaps in my knowledge as soon as they appear. I rely on readings and Google search to resolve any gaps in understanding I've identified.
+- Write all code by hand. Do not rely on the use of LLMs to write code or tests.
 - Do not look at coding examples online.
+
+Regarding the first rule, I want to reveal the gaps in my knowledge as soon as they appear. Where gaps arise, I will rely on Google search to resolve any gaps in understanding I've identified. The only allowed use of LLMs are 
+- Questions that clarify my mental model, e.g. "can you verify my understanding of gini impurity?"
+- Generating test data, especially for deep trees.
+
+Otherwise, I will not rely on LLMs for code implementation.
 
 My goal is to approach this exercise genuinely and honestly. I do not want to appear as anything other than myself — and what that entails is not posturing more than I actually know.
 
