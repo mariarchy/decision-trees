@@ -110,13 +110,30 @@ class RandomizedTree:
             feature=s.feature, threshold=s.threshold, left=left, right=right
         )
 
+    def traverse(
+        self, node: Union[InternalNode, LeafNode], data: np.ndarray
+    ) -> LeafNode:
+        assert len(data.shape) == 1
+        if isinstance(node, LeafNode):
+            return node
+
+        f, t = node.feature, node.threshold
+        assert f < len(data)
+
+        next_node = node.left if data[f] < t else node.right
+        return self.traverse(next_node, data)
+
     def predict(self, data: np.ndarray) -> int:
         """
         Predicts and returns the label for the data by traversing the tree
 
-        Raises MissingTreeException if the tree has not been built.
+        Raises exception if the tree has not been built.
         """
-        pass
+        if self.root is None:
+            raise Exception("Tree has not been built")
+
+        leaf = self.traverse(self.root, data)
+        return leaf.label
 
     def height(self) -> int:
         if self.root is None:

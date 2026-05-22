@@ -1,7 +1,7 @@
 import numpy as np
 import unittest
 from decision_tree import LeafNode, RandomizedTree, InternalNode
-from test_fixtures import X_deep, Y_deep
+from test_fixtures import X_deep, Y_deep, X_shallow, Y_shallow
 
 
 class TestInternalNode(unittest.TestCase):
@@ -103,18 +103,9 @@ class TestRandomizedTree(unittest.TestCase):
 
     def test_build_tree_shallow(self):
         # One level of recursion
-        X = np.array(
-            [
-                [0, 0],
-                [0, 1],
-                [10, 0],
-                [10, 1],
-            ]
-        )
-        Y = np.array([0, 0, 1, 1])
         tree = RandomizedTree(max_depth=10, min_samples=2)
         rng = np.random.default_rng(42)
-        root = tree.build_tree(X, Y, 0, rng)
+        root = tree.build_tree(X_shallow, Y_shallow, 0, rng)
 
         assert root.height() == 2
 
@@ -125,3 +116,49 @@ class TestRandomizedTree(unittest.TestCase):
         root = tree.build_tree(X_deep, Y_deep, 0, rng)
 
         assert root.height() == 9
+
+    def test_traverse_invalid_data_shape(self):
+        tree = RandomizedTree(max_depth=10, min_samples=2)
+        rng = np.random.default_rng(42)
+        root = tree.build_tree(X_shallow, Y_shallow, 0, rng)
+
+        invalid_data = np.array([[1, 2], [1, 1]])
+        with self.assertRaises(AssertionError):
+            tree.traverse(root, invalid_data)
+
+    def test_traverse_shallow(self):
+        tree = RandomizedTree()
+        rng = np.random.default_rng(42)
+        root = tree.build_tree(X_shallow, Y_shallow, 0, rng)
+
+        data = np.array([5, 2])
+        assert tree.traverse(root, data) == LeafNode(label=0)
+
+    def test_traverse_deep(self):
+        tree = RandomizedTree()
+        rng = np.random.default_rng(42)
+        root = tree.build_tree(X_deep, Y_deep, 0, rng)
+
+        data = np.array([17, 12, 10, 5])
+        assert tree.traverse(root, data) == LeafNode(label=0)
+
+    def test_predict_unbuilt_tree(self):
+        tree = RandomizedTree()
+
+        data = np.array([5, 2])
+        with self.assertRaises(Exception):
+            tree.predict(data)
+
+    def test_predict_shallow(self):
+        tree = RandomizedTree()
+        tree.create(X_shallow, Y_shallow, seed=42)
+
+        data = np.array([5, 2])
+        assert tree.predict(data) == 0
+
+    def test_predict_deep(self):
+        tree = RandomizedTree()
+        tree.create(X_deep, Y_deep, seed=42)
+
+        data = np.array([17, 12, 10, 5])
+        assert tree.predict(data) == 0
