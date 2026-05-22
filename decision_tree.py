@@ -30,8 +30,9 @@ class RandomizedTree:
         self.min_samples = min_samples
         self.root = None
 
-    def create(self, X: np.ndarray, Y: np.ndarray):
-        self.root = self._build_tree(X, Y, depth=0)
+    def create(self, X: np.ndarray, Y: np.ndarray, seed: int = 42):
+        rng = np.random.default_rng(seed)
+        self.root = self._build_tree(X, Y, depth=0, rng=rng)
 
     def _majority(self, Y: np.ndarray) -> int:
         """
@@ -59,15 +60,21 @@ class RandomizedTree:
             return LeafNode(label=self._majority(Y))
 
         _, n_features = X.shape
-        features = rng.choice(np.range(n_features), np.sqrt(n_features), replace=False)
+        # BUG #1: What if every feature is constant, i.e. has the same feature value across
+        # samples?
+        features = rng.choice(
+            np.arange(n_features), size=int(np.sqrt(n_features)), replace=False
+        )
         splits: list[Split] = []
 
         for feat in features:
             f_vals = X[:, feat]
             f_min, f_max = np.min(f_vals), np.max(f_vals)
-            threshold = rng.choice(np.range(f_min, f_max))
+            threshold = rng.choice(np.arange(f_min, f_max))
             row_mask = f_vals < threshold
             score = get_split_score(Y, Y[row_mask], Y[~row_mask])
+            # BUG #2: What if the chosen feature is constant, i.e. leaves one subtree empty?
+            # BUG #3: What if the split score is 0, i.e. the split does not improve purity?
             splits.append(
                 Split(feature=feat, threshold=threshold, score=score, row_mask=row_mask)
             )

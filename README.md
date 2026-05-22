@@ -79,7 +79,7 @@ Extremely Randomized Forests is an algorithm under the set of approaches within 
 
 First, we need to build each tree. The algorithm goes as follows:
 1. Start with the root node. Each node has a subset of the training dataset it works upon. At the root, this is the full training dataset. 
-2. Choose a random subset of features for this node (typically the square root of the total features available to the ). 
+2. Choose a random subset of features for this node (typically the square root of the total features available to the subtree). 
 3. For each feature in the subset, choose a random split value. The range should be the min to max value of feature values in the sample for this node.
 4. Pick the best among the random splits by measuring the impurity reduction, i.e. the split that gets us closest to a unanimous result, i.e. all examples in the left tree are one class, all examples in the right tree are another class.
 5. Create a left and a right subtree using the best split.
@@ -93,6 +93,18 @@ First, we need to build each tree. The algorithm goes as follows:
 Build any number of such trees.
 
 To generate the prediction yielded by a single tree, trace your tree through your example until you hit a leaf node. Return the leaf node and its associated class. To generate a prediction yielded by the forest of trees, repeat the single-prediction process on all trees and return the majority vote.
+
+### Debugging log
+
+Hello! Reporting live from the ground. There are a few special cases to consider.
+
+1. When sampling features in step 2, sample from _constant_ features. Otherwise, we will not find a valid split value for our subtree.
+2. If all feaures are constant, create a leaf node. There's no further split required.
+3. We should ignore splits with a score of 0, i.e. splits that do not improve the purity of the subtree
+
+### Scope
+
+For the purposes of this exercise, I will not enforce maximum leaf nodes.
 
 ## Data models
 
@@ -117,6 +129,5 @@ The leaf node contains just a class label.
 ### RandomizedTree
 
 The randomized tree that implements the ExtraTree algorithm. We'll just store a pointer to the root.
-
 
 Across these models we can store additional properties, but I'll just stick to the data I need for this exercise.
