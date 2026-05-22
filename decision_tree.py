@@ -34,6 +34,11 @@ class RandomizedTree:
         self.root = self._build_tree(X, Y, depth=0)
 
     def _majority(self, Y: np.ndarray) -> int:
+        """
+        Returns the majority value in 1D array Y
+        """
+        assert len(Y.shape) == 1
+
         return np.argmax(np.bincount(Y))
 
     def _build_tree(

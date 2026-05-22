@@ -2,6 +2,11 @@ import numpy as np
 
 
 def gini_impurity(Y: np.ndarray):
+    """
+    Y must be a 1D array
+    """
+    assert len(Y.shape) == 1
+
     if len(Y) == 0:
         return 0.0
     _, counts = np.unique(Y, return_counts=True)
@@ -10,6 +15,15 @@ def gini_impurity(Y: np.ndarray):
 
 
 def get_split_score(Y: np.ndarray, Y_left: np.ndarray, Y_right: np.ndarray):
+    """
+    Score splits by the gini impurity reduction (gini impurity of the parent minus
+    the weighted gini impurity of the subtrees).
+
+    All arrays must be a 1D array.
+    """
+    assert len(Y.shape) == 1
+    assert len(Y.shape) == len(Y_left.shape) and len(Y.shape) == len(Y_right.shape)
+
     n = len(Y)
     n_left = len(Y_left)
     n_right = len(Y_right)
