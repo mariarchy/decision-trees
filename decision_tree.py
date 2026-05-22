@@ -1,7 +1,7 @@
 import numpy as np
 from dataclasses import dataclass
 from typing import Union, NamedTuple
-from utils import gini_impurity, get_split_score
+from utils import get_nonconstant_features, get_split_score
 
 
 @dataclass
@@ -40,7 +40,7 @@ class RandomizedTree:
         """
         assert len(Y.shape) == 1
 
-        return np.argmax(np.bincount(Y))
+        return int(np.argmax(np.bincount(Y)))
 
     def _build_tree(
         self, X: np.ndarray, Y: np.ndarray, depth: int, rng: np.random.Generator
@@ -59,26 +59,35 @@ class RandomizedTree:
         if np.all(X == X[0]) or depth == self.max_depth or len(X) == self.min_samples:
             return LeafNode(label=self._majority(Y))
 
-        _, n_features = X.shape
-        # BUG #1: What if every feature is constant, i.e. has the same feature value across
-        # samples?
-        features = rng.choice(
-            np.arange(n_features), size=int(np.sqrt(n_features)), replace=False
-        )
-        splits: list[Split] = []
+        nonconst_feats = get_nonconstant_features(X)
+        _, n_feats = X.shape
+        n_sample_feats = int(np.sqrt(n_feats))
 
+        features = rng.choice(nonconst_feats, size=n_sample_feats, replace=False)
+
+        splits: list[Split] = []
         for feat in features:
             f_vals = X[:, feat]
             f_min, f_max = np.min(f_vals), np.max(f_vals)
-            threshold = rng.choice(np.arange(f_min, f_max))
+
+            assert f_min != f_max  # We should not be handling any constant features
+
+            u = rng.random()  # [0, 1)
+
+            # (f_min, f_max], f_min should be exclusive to avoid bad splits
+            threshold = f_min + (1 - u) * (f_max - f_min)
             row_mask = f_vals < threshold
-            score = get_split_score(Y, Y[row_mask], Y[~row_mask])
-            # BUG #2: What if the chosen feature is constant, i.e. leaves one subtree empty?
-            # BUG #3: What if the split score is 0, i.e. the split does not improve purity?
+            left, right = Y[row_mask], Y[~row_mask]
+            score = get_split_score(Y, left, right)
+
+            # We should not be choosing split values that yield empty subtrees
+            assert len(left) > 0 and len(right) > 0
+
             splits.append(
                 Split(feature=feat, threshold=threshold, score=score, row_mask=row_mask)
             )
 
+        assert len(s) > 0
         s = max(splits, key=lambda s: s.score)
         left = self._build_tree(X[s.row_mask], Y[s.row_mask], depth + 1, rng)
         right = self._build_tree(X[~s.row_mask], Y[~s.row_mask], depth + 1, rng)

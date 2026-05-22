@@ -85,12 +85,11 @@ First, we need to build each tree. The algorithm goes as follows:
 5. Create a left and a right subtree using the best split.
 6. If any of the following conditions are met in the subtree, create a leaf node. No more subtrees allowed!
 - The subtree has hit maximum purity, i.e. the results are unanimous for the subtree.
-- No subtrees yield a reduction in impurity, i.e. it's not worth going further.
-- We have hit the maximum allowed depth for the tree.
-- We have hit the maximum permitted leaf nodes in the tree.
-7. Otherwise, repeat step 1-4 for each subtree with their selected subset of samples.
+- We have hit the maximum allowed depth in the subtree.
+- We have hit the minimum samples allowed in the subtree
+7. Otherwise, repeat step 1-6 for each subtree with their selected subset of samples.
 
-Build any number of such trees.
+Build any number of such trees, let's say, 100.
 
 To generate the prediction yielded by a single tree, trace your tree through your example until you hit a leaf node. Return the leaf node and its associated class. To generate a prediction yielded by the forest of trees, repeat the single-prediction process on all trees and return the majority vote.
 
@@ -102,9 +101,6 @@ Hello! Reporting live from the ground. There are a few special cases to consider
 2. If all feaures are constant, create a leaf node. There's no further split required.
 3. We should ignore splits with a score of 0, i.e. splits that do not improve the purity of the subtree
 
-### Scope
-
-For the purposes of this exercise, I will not enforce maximum leaf nodes.
 
 ## Data models
 

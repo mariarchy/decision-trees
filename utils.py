@@ -40,3 +40,13 @@ def get_split_score(Y: np.ndarray, Y_left: np.ndarray, Y_right: np.ndarray):
     weighted_split_imp = left_weight * left_imp + right_weight * right_imp
 
     return parent_imp - weighted_split_imp
+
+
+def get_nonconstant_features(X: np.ndarray) -> np.ndarray[int]:
+    assert len(X.shape) == 2
+    # Get all features (i) where i is not constant between samples by
+    # comparing each comlumn to its first element and returning the
+    # columns where values across all rows are true
+    mask = np.any(X != X[0, :], axis=0)
+    n_features = X.shape[1]
+    return np.arange(n_features)[mask]

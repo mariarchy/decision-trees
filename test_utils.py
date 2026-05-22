@@ -1,6 +1,6 @@
 import numpy as np
 import unittest
-from utils import gini_impurity, get_split_score
+from utils import gini_impurity, get_split_score, get_nonconstant_features
 
 
 class TestGiniImpurity(unittest.TestCase):
@@ -57,3 +57,19 @@ class TestSplitScore(unittest.TestCase):
         left = np.array([2, 2, 3])  # 0.4444444
         right = np.array([1, 1])  # 0
         assert np.isclose(get_split_score(parent, left, right), 0.3733333333)
+
+
+class TestGetNonConstantFeatures(unittest.TestCase):
+    def test_get_nonconstant_features_invalid_shape_errors(self):
+        X = np.array([1, 2, 3, 4])
+        with self.assertRaises(AssertionError):
+            get_nonconstant_features(X)
+
+    def test_get_nonconstant_features_all_constant(self):
+        X = np.array([[1, 2], [1, 2]])
+        assert len(get_nonconstant_features(X)) == 0
+
+    def test_get_nonconstant_features_some_constant(self):
+        X = np.array([[1, 2, 3], [1, 2, 4]])
+        expected = np.array([2])
+        assert np.array_equal(get_nonconstant_features(X), expected)
