@@ -32,7 +32,7 @@ class RandomizedTree:
 
     def create(self, X: np.ndarray, Y: np.ndarray, seed: int = 42):
         rng = np.random.default_rng(seed)
-        self.root = self._build_tree(X, Y, depth=0, rng=rng)
+        self.root = self.build_tree(X, Y, depth=0, rng=rng)
 
     def _majority(self, Y: np.ndarray) -> int:
         """
@@ -42,7 +42,7 @@ class RandomizedTree:
 
         return int(np.argmax(np.bincount(Y)))
 
-    def _build_tree(
+    def build_tree(
         self, X: np.ndarray, Y: np.ndarray, depth: int, rng: np.random.Generator
     ):
         """
@@ -53,15 +53,19 @@ class RandomizedTree:
         """
         assert len(X) > 0
         assert len(X) == len(Y)
+        assert len(X.shape) == 2
         assert len(Y.shape) == 1
 
         # Termination case
-        if np.all(X == X[0]) or depth == self.max_depth or len(X) == self.min_samples:
+        if np.all(X == X[0]) or depth == self.max_depth or len(X) <= self.min_samples:
             return LeafNode(label=self._majority(Y))
 
         nonconst_feats = get_nonconstant_features(X)
-        _, n_feats = X.shape
-        n_sample_feats = int(np.sqrt(n_feats))
+        n_sample_feats = int(np.sqrt(len(nonconst_feats)))
+
+        # If all features are constant, create a leaf node with the majority.
+        if len(nonconst_feats) == 0:
+            return LeafNode(label=self._majority(Y))
 
         features = rng.choice(nonconst_feats, size=n_sample_feats, replace=False)
 
@@ -87,7 +91,7 @@ class RandomizedTree:
                 Split(feature=feat, threshold=threshold, score=score, row_mask=row_mask)
             )
 
-        assert len(s) > 0
+        assert len(splits) > 0
         s = max(splits, key=lambda s: s.score)
         left = self._build_tree(X[s.row_mask], Y[s.row_mask], depth + 1, rng)
         right = self._build_tree(X[~s.row_mask], Y[~s.row_mask], depth + 1, rng)
