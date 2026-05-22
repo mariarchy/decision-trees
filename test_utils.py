@@ -1,6 +1,6 @@
 import numpy as np
 import unittest
-from utils import gini_impurity, get_split_score, get_nonconstant_features
+from utils import gini_impurity, get_split_score, get_nonconstant_features, majority
 
 
 class TestGiniImpurity(unittest.TestCase):
@@ -73,3 +73,14 @@ class TestGetNonConstantFeatures(unittest.TestCase):
         X = np.array([[1, 2, 3], [1, 2, 4]])
         expected = np.array([2])
         assert np.array_equal(get_nonconstant_features(X), expected)
+
+
+class TestMajority(unittest.TestCase):
+    def test_majority_invalid_shape(self):
+        Y = np.array([[1, 1, 1]])
+        with self.assertRaises(AssertionError):
+            majority(Y)
+
+    def test_majority_works(self):
+        Y = np.array([1, 1, 1, 2, 2, 3, 3])
+        assert majority(Y) == 1

@@ -1,7 +1,7 @@
 import numpy as np
 from dataclasses import dataclass
 from typing import Union, NamedTuple
-from utils import get_nonconstant_features, get_split_score
+from utils import get_nonconstant_features, get_split_score, majority
 
 
 @dataclass
@@ -46,13 +46,6 @@ class RandomizedTree:
         rng = np.random.default_rng(seed)
         self.root = self.build_tree(X, Y, depth=0, rng=rng)
 
-    def _majority(self, Y: np.ndarray) -> int:
-        """
-        Returns the majority value in 1D array Y
-        """
-        assert len(Y.shape) == 1
-        return int(np.argmax(np.bincount(Y)))
-
     def build_tree(
         self, X: np.ndarray, Y: np.ndarray, depth: int, rng: np.random.Generator
     ):
@@ -69,14 +62,14 @@ class RandomizedTree:
 
         # Termination case
         if np.all(X == X[0]) or depth == self.max_depth or len(X) <= self.min_samples:
-            return LeafNode(label=self._majority(Y))
+            return LeafNode(label=majority(Y))
 
         nonconst_feats = get_nonconstant_features(X)
         n_sample_feats = int(np.sqrt(len(nonconst_feats)))
 
         # If all features are constant, create a leaf node with the majority.
         if len(nonconst_feats) == 0:
-            return LeafNode(label=self._majority(Y))
+            return LeafNode(label=majority(Y))
 
         features = rng.choice(nonconst_feats, size=n_sample_feats, replace=False)
 
@@ -136,24 +129,37 @@ class RandomizedTree:
         return leaf.label
 
     def height(self) -> int:
-        if self.root is None:
-            return -1
+        return self.root.height() if self.root is not None else -1
 
-        return self.root.height()
+    def is_built(self) -> bool:
+        return self.root is not None
 
 
 class RandomizedForest:
-    def __init__(self, trees: list[RandomizedTree]):
-        self.trees = trees
+    def __init__(self, trees: list[RandomizedTree] | None = None):
+        self.trees = trees if trees is not None else []
 
-    def initialize(num_trees: int) -> list[RandomizedTree]:
+    def initialize(
+        self, X: np.ndarray, Y: np.ndarray, num_trees: int = 100
+    ) -> list[RandomizedTree]:
         """
         Factory function for initializing a forest of num_trees trees
+        The index of the tree is used as the rng seed value to produce
+        a list of randomized trees
         """
-        pass
+        trees = []
+        for i in range(num_trees):
+            t = RandomizedTree()
+            t.create(X, Y, seed=i)
+            trees.append(t)
+        self.trees = trees
+        return trees
 
-    def predict(self, data: np.ndarray) -> int:
+    def predict(self, data: np.ndarray) -> int | None:
         """
         Returns the majority prediction across the forest of trees
         """
-        pass
+        if len(self.trees) == 0:
+            return None
+        preditions = np.array([t.predict(data) for t in self.trees])
+        return majority(preditions)

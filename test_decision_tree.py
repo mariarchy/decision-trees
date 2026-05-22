@@ -1,6 +1,6 @@
 import numpy as np
 import unittest
-from decision_tree import LeafNode, RandomizedTree, InternalNode
+from decision_tree import LeafNode, RandomizedTree, InternalNode, RandomizedForest
 from test_fixtures import X_deep, Y_deep, X_shallow, Y_shallow
 
 
@@ -26,17 +26,6 @@ class TestInternalNode(unittest.TestCase):
 
 
 class TestRandomizedTree(unittest.TestCase):
-    def test_majority_invalid_shape(self):
-        Y = np.array([[1, 1, 1]])
-        tree = RandomizedTree()
-        with self.assertRaises(AssertionError):
-            tree._majority(Y)
-
-    def test_majority_works(self):
-        Y = np.array([1, 1, 1, 2, 2, 3, 3])
-        tree = RandomizedTree()
-        assert tree._majority(Y) == 1
-
     def test_build_tree_empty_sample(self):
         X = np.array([])
         Y = np.array([[1, 1, 1]])
@@ -162,3 +151,23 @@ class TestRandomizedTree(unittest.TestCase):
 
         data = np.array([17, 12, 10, 5])
         assert tree.predict(data) == 0
+
+
+class TestRandomizedForest(unittest.TestCase):
+    def test_initialize_works(self):
+        forest = RandomizedForest()
+        forest.initialize(X_deep, Y_deep, num_trees=100)
+        assert len(forest.trees) == 100
+        assert all(t.is_built() for t in forest.trees)
+
+    def test_predict_no_trees(self):
+        forest = RandomizedForest()
+        data = np.array([17, 12, 10, 5])
+        assert forest.predict(data) is None
+
+    def test_predict_works(self):
+        forest = RandomizedForest()
+        forest.initialize(X_deep, Y_deep, num_trees=100)
+
+        data = np.array([17, 12, 10, 5])
+        assert forest.predict(data) == 0

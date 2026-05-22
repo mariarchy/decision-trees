@@ -50,3 +50,11 @@ def get_nonconstant_features(X: np.ndarray) -> np.ndarray[int]:
     mask = np.any(X != X[0, :], axis=0)
     n_features = X.shape[1]
     return np.arange(n_features)[mask]
+
+
+def majority(Y: np.ndarray) -> int:
+    """
+    Returns the majority value in 1D array Y
+    """
+    assert len(Y.shape) == 1
+    return int(np.argmax(np.bincount(Y)))
