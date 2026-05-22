@@ -61,7 +61,12 @@ class RandomizedTree:
         assert len(Y.shape) == 1
 
         # Termination case
-        if np.all(X == X[0]) or depth == self.max_depth or len(X) <= self.min_samples:
+        if (
+            np.all(X == X[0])
+            or np.all(Y == Y[0])
+            or depth == self.max_depth
+            or len(X) <= self.min_samples
+        ):
             return LeafNode(label=majority(Y))
 
         nonconst_feats = get_nonconstant_features(X)

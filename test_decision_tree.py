@@ -60,6 +60,14 @@ class TestRandomizedTree(unittest.TestCase):
 
     def test_build_tree_identical_sample_data(self):
         X = np.array([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0], [1.0, 1.0, 1.0]])
+        Y = np.array([1, 2, 1])
+        tree = RandomizedTree()
+        rng = np.random.default_rng(42)
+
+        assert tree.build_tree(X, Y, 0, rng) == LeafNode(label=1)
+
+    def test_build_tree_unanimous_labels(self):
+        X = np.array([[1.0, 2.0, 3.0], [1.0, 1.0, 1.0], [1.0, 2.0, 4.0]])
         Y = np.array([1, 1, 1])
         tree = RandomizedTree()
         rng = np.random.default_rng(42)

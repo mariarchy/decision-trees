@@ -2,21 +2,21 @@
 
 ## If you're reading this
 
-This is my attempt at building my mental model of a supervised learning algorithm called Extremely Randomized Forests (commonly referred to as ExtraTrees) after absolutely bonking a coding assessment for a fellowship program I had my eyes set on (I'm fine, I swear).
+This is my attempt at building my mental model of a supervised learning algorithm called Extremely Randomized Trees (commonly referred to as ExtraTrees), introduced by Geurts et al., after absolutely bonking a coding assessment for a fellowship program I had my eyes set on (I’m fine, I swear).
 
 ## The exercise
 
-I've spent the last few hours reading articles on the topic ([this visualization](https://mlu-explain.github.io/decision-tree/) has to be my favourite thus far). My goal is to implement the algorithm from scratch and stress-test my understanding of the concept. 
+I've spent a few hours reading articles on the topic ([this visualization](https://mlu-explain.github.io/decision-tree/) has to be my favourite thus far) and skimmed through [the original paper](https://link.springer.com/article/10.1007/s10994-006-6226-1). My goal is to implement the algorithm from scratch and stress-test my understanding of the concept. 
 
 Here are a few rules I set for myself:
 - Write all code by hand. Do not rely on the use of LLMs to write code or tests.
 - Do not look at coding examples online.
 
-Regarding the first rule, I want to reveal the gaps in my knowledge as soon as they appear. Where gaps arise, I will rely on Google search to resolve any gaps in understanding I've identified. The only allowed use of LLMs are 
-- Questions that clarify my mental model, e.g. "can you verify my understanding of gini impurity?"
-- Generating test data, especially for deep trees.
+Regarding the first rule, I want to reveal the gaps in my knowledge as soon as they appear. Where gaps arise, I will rely on Google search. The only allowed use of LLMs are 
+- Questions that clarify my mental model, e.g. _"can you verify my understanding of GINI impurity?"_
+- Generating test data, especially for deep trees (see `test_fixtures.py`).
 
-Otherwise, I will not rely on LLMs for code implementation.
+Otherwise, I did not rely on LLMs for this exercise. That includes all the code written and the content of this README (hello world!).
 
 My goal is to approach this exercise genuinely and honestly. I do not want to appear as anything other than myself — and what that entails is not posturing more than I actually know.
 
@@ -26,9 +26,9 @@ I am a senior software engineer with little-to-no ML experience. I don't expect 
 
 ## Decision trees, in my own words
 
-Machine learning, or at least my mental model of it thus far, is interesting. You're postulating that the underlying pattern to be learned exists in your training data, without knowing the full specification of that pattern. These various methods of learning attempt to learn something neither the algorithm nor the human can see, by analyzing a sample of its shadows.
+Machine learning, or at least my mental model of it thus far, is interesting. You're postulating that the underlying pattern to be learned exists in your training data, without knowing the full specification of that pattern. These various methods of learning attempt to learn something neither the algorithm nor the human can see. It's almost like trying to identify something using only a sample of its shadows.
 
-Decision trees are a class of machine learning methods that take a stab at this problem of learning through a deicison tree structure. The underyling principle across these approaches is that the _truth_ or the _pattern_ you're trying to uncover can be modeled as a tree of decisions.
+Decision trees are a class of machine learning methods that take a stab at this problem of learning through a decision tree structure. The underyling principle across this class of approaches is that the _truth_ to uncover can be modeled as a _tree of decisions._
 
 The classic example is a decision tree for classifying fruits. Imagine you have a table of data on fruits and their weights:
 
@@ -78,35 +78,68 @@ We've effectively hardcoded or overfit our decision tree to the outlier. "weight
 
 The goal of the approaches within #1 must optimize for (1) the diversity and (2) independence of the trees. For instance, if your trees are all bad and strongly correlated, the probability of the majority vote being correct doesn't change much from the probability of a single tree being correct. Diversity and independence is achievable through randomizing as much of the tree construction as possible.
  
-## Extremely Randomized Forests, in my own words
-Extremely Randomized Forests is an algorithm under the set of approaches within #1. In layman's terms, it says, "Let's create a bunch of trees randomly, i.e. randomize the feature and the split we choose at each internal node — capped at the minimum size a subtree of samples is allowed to contain — and let this forest of random trees vote on prediction. Majority vote wins"
+## Extremely Randomized Trees, in my own words
+Extremely Randomized Trees is an algorithm under the set of approaches within #1. In layman's terms, it says, "Let's create a bunch of trees randomly. This means we randomize the feature and the split we choose at each internal node of the tree. Let this ensemble, or forest, of random trees vote on prediction. Majority vote wins."
 
 ### Algorithm
 
 First, we need to build each tree. The algorithm goes as follows:
 1. Start with the root node. Each node has a subset of the training dataset it works upon. At the root, this is the full training dataset. 
-2. Choose a random subset of features for this node (typically the square root of the total features available to the subtree). 
-3. For each feature in the subset, choose a random split value. The range should be the min to max value of feature values in the sample for this node.
-4. Pick the best among the random splits by measuring the impurity reduction, i.e. the split that gets us closest to a unanimous result, i.e. all examples in the left tree are one class, all examples in the right tree are another class.
-5. Create a left and a right subtree using the best split.
+2. Choose a random sample of non-constant features for the sample data on this node. The sample size should be set to the square root of the number of non-constant features for classification problems, according to the original paper. 
+3. For each feature in the subset, choose a random split value. The range should be [min, max] of the feature values in the sample for this node.* If the split yields an empty set in either the left or right, discard it and continue to the next split. A node with no examples is not meaningful.
+4. Pick the best split measuring each split's impurity reduction, i.e. the split that gets us closest to a unanimous result. In practice, this would look like a split where all examples in the left tree are one class, all examples in the right tree are another class.
+5. Create a left and a right subtree using the selected split.
 6. If any of the following conditions are met in the subtree, create a leaf node. No more subtrees allowed!
 - The subtree has hit maximum purity, i.e. the results are unanimous for the subtree.
-- We have hit the maximum allowed depth in the subtree.
+- We have hit the maximum allowed depth in the tree.
 - We have hit the minimum samples allowed in the subtree
-7. Otherwise, repeat step 1-6 for each subtree with their selected subset of samples.
+7. Otherwise, repeat step 2-6 for each subtree with their selected subset of samples.
 
-Build any number of such trees, let's say, 100.
+To predict a label from a single tree, traverse through the tree with your test data until you hit a leaf node. Return the associated label to the leaf node. 
 
-To generate the prediction yielded by a single tree, trace your tree through your example until you hit a leaf node. Return the leaf node and its associated class. To generate a prediction yielded by the forest of trees, repeat the single-prediction process on all trees and return the majority vote.
+To predict a label from a forest of trees, build any number of such trees, let's say, 100. Repeat the single-prediction process on all trees and return the majority vote.
+
+_* While debugging I implemented a slight improvement to the feature selection algorithm. See below_
 
 ### Debugging log
 
-Hello! Reporting live from the ground. There are a few special cases to consider.
+Hello! Reporting live from the ground. It seems like there's some cases we should watch out for as we generate randomized splits of data. I ran into errors during testing because I was passing around empty subtrees, which seems to be a common gotcha of this problem.
 
-1. When sampling features in step 2, sample from _constant_ features. Otherwise, we will not find a valid split value for our subtree.
+Generally, splits that yield an empty left or right subtree are bad and should be avoided. They don't provide any meaningful decision boundary on the data.
+
+The bugs that caused this error were:
+1. I did not filter out nonconstant features. This caused my 
+
+```python
+f_vals = X[:, feat]
+f_min, f_max = np.min(f_vals), np.max(f_vals)
+# Where f_min == f_max. As a result the randomly picked threshold (== fmin == fmax) would yield an empty left subtree and full right subtree
+```
+
+2. I set bad thresholds.
+
+```python
+u = rng.random()  # [0, 1)
+threshold = f_min + u * (f_max - f_min)  # [f_min, f_max)
+# if threshold == f_min, we run into, yet again, an empty left subtree and full right subtree
+```
+
+I implemented the following fixes for choosing better splits:
+
+1. Sample from _nonconstant_ features, i.e. features whose values are unique.
 2. If all feaures are constant, create a leaf node. There's no further split required.
-3. We should ignore splits with a score of 0, i.e. splits that do not improve the purity of the subtree
+3. Exclude the minimum value from the split value sample range. We should be sampling from `(min, max]`, rather than `[min, max]`
 
+*Bonus idea: Ignore zero impurity reduction splits*
+We should ignore splits with a score of 0, i.e. splits that do not improve the purity of the subtree. A decision boundary here is wasted tree depth: the tree spends splits that don't reduce impurity, growing taller and more overfit than necessary, until it bottoms out on min_samples/max_depth.
+
+I didn't end up implementing this but it's definitely straightforward to add.
+
+```python
+# No need to create subtrees. Just return a leaf node
+if len([s for s in splits if s.score == 0]) > 0:
+  return LeafNode(label=majority(Y))
+```
 
 ## Data models
 
